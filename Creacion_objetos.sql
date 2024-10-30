@@ -1,15 +1,42 @@
+/* Materia: Base de datos aplicada
+Fecha de entrega: 12/11/2024
+Grupo: 4
+Nombres y DNI: Melani Antonella Morales Castillo(42242365).
+				Tomas Osorio (43035245)
+				Pablo Mela(41027430)
+
+Enunciado:Entrega 3
+Luego de decidirse por un motor de base de datos relacional, llegó el momento de generar la
+base de datos.
+Deberá instalar el DMBS y documentar el proceso. No incluya capturas de pantalla. Detalle
+las configuraciones aplicadas (ubicación de archivos, memoria asignada, seguridad, puertos,
+etc.) en un documento como el que le entregaría al DBA.
+Cree la base de datos, entidades y relaciones. Incluya restricciones y claves. Deberá entregar
+un archivo .sql con el script completo de creación (debe funcionar si se lo ejecuta “tal cual” es
+entregado). Incluya comentarios para indicar qué hace cada módulo de código.
+Genere store procedures para manejar la inserción, modificado, borrado (si corresponde,
+también debe decidir si determinadas entidades solo admitirán borrado lógico) de cada tabla.
+Los nombres de los store procedures NO deben comenzar con “SP”.
+Genere esquemas para organizar de forma lógica los componentes del sistema y aplique esto
+en la creación de objetos. NO use el esquema “dbo”.
+*/
+
+-- Creación de la base de datos
 create database AuroraDB;
 go
 
+-- Selección de la base de datos creada
 use AuroraDB;
 go
 
+-- Creación de los esquemas
 create schema rrhh;
 go
 
 create schema op;
 go
 
+-- Creación de las tablas
 create table rrhh.sucursal (
 	id int identity(1,1) primary key,
 	ciudad varchar(30) not null,
@@ -55,39 +82,27 @@ create table op.categoria (
 );
 go
 
-create table op.catalogo (
-	id int identity(1,1) primary key,
-	id_categoria int not null,
-	nombre varchar(50) not null,
-	precio decimal(5,2) not null, /*???*/
-	precio_referencia decimal(5,2) not null,
-	unidad_referencia varchar(6) not null, /*100 ml*/
-	fecha smalldatetime default getdate(),
-	constraint FK_categoria foreign key
-	(id_categoria) references op.categoria(id)
-);
-go
-
 create table op.proveedor (
 	id int identity(1,1) primary key,
 	nombre varchar(50) not null
 );
 go
 
-create table op.importado (
+create table op.productos (
 	id int identity(1,1) primary key,
-	nombre varchar(50) not null,
-	id_proveedor int not null,
 	id_categoria int not null,
-	cantidad_unidad varchar(20) not null, /*10 cajas x 12 piezas*/
-	precio_unidad decimal(5,2) not null /*123,79*/
-);
-go
-
-create table op.producto_electronico (
-	id int identity(1,1) primary key,
 	nombre varchar(50) not null,
-	precio_dolares decimal(6,2) not null /*1700,00*/
+	precio decimal(5,2) not null, /*???*/
+	precio_referencia decimal(5,2) not null,
+	unidad_referencia varchar(6) not null, /*100 ml*/
+	cantidad_unidad varchar(20) not null,
+	precio_dolares decimal(6,2) not null,
+	id_proveedor int not null,
+	fecha smalldatetime default getdate(),
+	constraint FK_categoria foreign key
+	(id_categoria) references op.categoria(id),
+	constraint FK_proveedor foreign key
+	(id_proveedor) references op.categoria(id)
 );
 go
 
@@ -102,17 +117,19 @@ create table op.venta (
 	fecha smalldatetime not null,
 	id_medio_pago int not null,
 	legajo_empleado int not null,
-	identificador_pago varchar(23) /*'0000003100099475144530*/
+	identificador_pago varchar(23), /*'0000003100099475144530*/
 	cancelado bit not null,
 	constraint FK_sucursal foreign key
 	(id_sucursal) references rrhh.sucursal(id),
-	constraint FK_sucursal foreign key
-	(id_sucursal) references rrhh.sucursal(id),
-	constraint FK_sucursal foreign key
-	(id_sucursal) references rrhh.sucursal(id),
+	constraint FK_producto foreign key
+	(id_producto) references op.productos(id),
+	constraint FK_medio_pago foreign key
+	(id_medio_pago) references op.medioPago(id),
 );
 go
 
+
+-- SP de inserción, modificación y borrado de las tablas
 /*----------------SP sucursal-----------------*/
 create or alter procedure rrhh.ingresarSucursal
 	@ciudad varchar(30),
@@ -247,3 +264,71 @@ begin
 	set nocount on;
 	delete from op.medioPago where id = @id;
 end;
+go
+
+/*---------------Categoría---------------*/
+create or alter procedure op.ingresarCategoria
+	@descripcion varchar(30)
+as
+begin
+	set nocount on;
+	insert into op.categoria (descripcion)
+	values (@descripcion);
+end;
+go
+
+create or alter procedure op.modificarCategoria
+	@id int,
+	@descripcion varchar(30) = null
+as
+begin
+	set nocount on;
+	update op.categoria set
+		descripcion = coalesce(@descripcion, descripcion)
+	where id = @id;
+end;
+go
+
+create or alter procedure op.borrarCategoria
+	@id int
+as
+begin
+	set nocount on;
+	delete from op.categoria where id = @id;
+end;
+go
+
+/*---------------Proveedor---------------*/
+create or alter procedure op.ingresarProveedor
+	@nombre varchar(50)
+as
+begin
+	set nocount on;
+	insert into op.proveedor (nombre)
+	values (@nombre);
+end;
+go
+
+create or alter procedure op.modificarProveedor
+	@id int,
+	@nombre varchar(50) = null
+as
+begin
+	set nocount on;
+	update op.proveedor set
+		nombre = coalesce(@nombre, nombre)
+	where id = @id;
+end;
+go
+
+create or alter procedure op.borrarProveedor
+	@id int
+as
+begin
+	set nocount on;
+	delete from op.proveedor where id = @id;
+end;
+go
+
+/*---------------Productos---------------*/
+/*---------------Ventas---------------*/
