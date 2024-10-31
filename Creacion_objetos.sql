@@ -6,37 +6,37 @@ Nombres y DNI: Melani Antonella Morales Castillo(42242365).
 				Pablo Mela(41027430)
 
 Enunciado:Entrega 3
-Luego de decidirse por un motor de base de datos relacional, llegÛ el momento de generar la
+Luego de decidirse por un motor de base de datos relacional, lleg√≥ el momento de generar la
 base de datos.
-Deber· instalar el DMBS y documentar el proceso. No incluya capturas de pantalla. Detalle
-las configuraciones aplicadas (ubicaciÛn de archivos, memoria asignada, seguridad, puertos,
-etc.) en un documento como el que le entregarÌa al DBA.
-Cree la base de datos, entidades y relaciones. Incluya restricciones y claves. Deber· entregar
-un archivo .sql con el script completo de creaciÛn (debe funcionar si se lo ejecuta ìtal cualî es
-entregado). Incluya comentarios para indicar quÈ hace cada mÛdulo de cÛdigo.
-Genere store procedures para manejar la inserciÛn, modificado, borrado (si corresponde,
-tambiÈn debe decidir si determinadas entidades solo admitir·n borrado lÛgico) de cada tabla.
-Los nombres de los store procedures NO deben comenzar con ìSPî.
-Genere esquemas para organizar de forma lÛgica los componentes del sistema y aplique esto
-en la creaciÛn de objetos. NO use el esquema ìdboî.
+Deber√° instalar el DMBS y documentar el proceso. No incluya capturas de pantalla. Detalle
+las configuraciones aplicadas (ubicaci√≥n de archivos, memoria asignada, seguridad, puertos,
+etc.) en un documento como el que le entregar√≠a al DBA.
+Cree la base de datos, entidades y relaciones. Incluya restricciones y claves. Deber√° entregar
+un archivo .sql con el script completo de creaci√≥n (debe funcionar si se lo ejecuta ‚Äútal cual‚Äù es
+entregado). Incluya comentarios para indicar qu√© hace cada m√≥dulo de c√≥digo.
+Genere store procedures para manejar la inserci√≥n, modificado, borrado (si corresponde,
+tambi√©n debe decidir si determinadas entidades solo admitir√°n borrado l√≥gico) de cada tabla.
+Los nombres de los store procedures NO deben comenzar con ‚ÄúSP‚Äù.
+Genere esquemas para organizar de forma l√≥gica los componentes del sistema y aplique esto
+en la creaci√≥n de objetos. NO use el esquema ‚Äúdbo‚Äù.
 */
 
--- CreaciÛn de la base de datos
+-- Creaci√≥n de la base de datos
 create database AuroraDB;
 go
 
--- SelecciÛn de la base de datos creada
+-- Selecci√≥n de la base de datos creada
 use AuroraDB;
 go
 
--- CreaciÛn de los esquemas
+-- Creaci√≥n de los esquemas
 create schema rrhh;
 go
 
 create schema op;
 go
 
--- CreaciÛn de las tablas
+-- Creaci√≥n de las tablas
 create table rrhh.sucursal (
 	id int identity(1,1) primary key,
 	ciudad varchar(30) not null,
@@ -129,7 +129,7 @@ create table op.venta (
 go
 
 
--- SP de inserciÛn, modificaciÛn y borrado de las tablas
+-- SP de inserci√≥n, modificaci√≥n y borrado de las tablas
 /*----------------SP sucursal-----------------*/
 create or alter procedure rrhh.ingresarSucursal
 	@ciudad varchar(30),
@@ -266,7 +266,7 @@ begin
 end;
 go
 
-/*---------------CategorÌa---------------*/
+/*---------------Categor√≠a---------------*/
 create or alter procedure op.ingresarCategoria
 	@descripcion varchar(30)
 as
@@ -331,4 +331,89 @@ end;
 go
 
 /*---------------Productos---------------*/
+
+-- Inserci√≥n en Productos
+CREATE PROCEDURE InsertarProducto
+    @Nombre NVARCHAR(100),
+    @Categoria NVARCHAR(50),
+    @Precio DECIMAL(10, 2),
+    @Stock INT
+AS
+BEGIN
+    INSERT INTO Productos (Nombre, Categoria, Precio, Stock)
+    VALUES (@Nombre, @Categoria, @Precio, @Stock);
+END;
+GO
+
+-- Modificaci√≥n en Productos
+CREATE PROCEDURE ModificarProducto
+    @ProductoID INT,
+    @Nombre NVARCHAR(100) = NULL,
+    @Categoria NVARCHAR(50) = NULL,
+    @Precio DECIMAL(10, 2) = NULL,
+    @Stock INT = NULL
+AS
+BEGIN
+    UPDATE Productos
+    SET 
+        Nombre = COALESCE(@Nombre, Nombre),
+        Categoria = COALESCE(@Categoria, Categoria),
+        Precio = COALESCE(@Precio, Precio),
+        Stock = COALESCE(@Stock, Stock)
+    WHERE ProductoID = @ProductoID;
+END;
+GO
+
+-- Borrado en Productos
+CREATE PROCEDURE BorrarProducto
+    @ProductoID INT
+AS
+BEGIN
+    DELETE FROM Productos
+    WHERE ProductoID = @ProductoID;
+END;
+GO
+
 /*---------------Ventas---------------*/
+
+-- Inserci√≥n en Ventas
+CREATE PROCEDURE InsertarVenta
+    @ProductoID INT,
+    @Cantidad INT,
+    @FechaVenta DATE,
+    @Total DECIMAL(10, 2)
+AS
+BEGIN
+    INSERT INTO Ventas (ProductoID, Cantidad, FechaVenta, Total)
+    VALUES (@ProductoID, @Cantidad, @FechaVenta, @Total);
+END;
+GO
+
+-- Modificaci√≥n en Ventas
+CREATE PROCEDURE ModificarVenta
+    @VentaID INT,
+    @ProductoID INT = NULL,
+    @Cantidad INT = NULL,
+    @FechaVenta DATE = NULL,
+    @Total DECIMAL(10, 2) = NULL
+AS
+BEGIN
+    UPDATE Ventas
+    SET 
+        ProductoID = COALESCE(@ProductoID, ProductoID),
+        Cantidad = COALESCE(@Cantidad, Cantidad),
+        FechaVenta = COALESCE(@FechaVenta, FechaVenta),
+        Total = COALESCE(@Total, Total)
+    WHERE VentaID = @VentaID;
+END;
+GO
+
+-- Borrado en Ventas
+CREATE PROCEDURE BorrarVenta
+    @VentaID INT
+AS
+BEGIN
+    DELETE FROM Ventas
+    WHERE VentaID = @VentaID;
+END;
+GO
