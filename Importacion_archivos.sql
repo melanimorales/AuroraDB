@@ -1,5 +1,5 @@
 /* Materia: Base de datos aplicada
-Fecha de entrega: 12/11/2024
+Fecha de entrega: 05/11/2024
 Grupo: 4
 Nombres y DNI: Melani Antonella Morales Castillo(42242365).
 				Tomas Osorio (43035245)
@@ -33,27 +33,74 @@ create table #importado (
 	nombre varchar(50) not null,
 	id_proveedor int not null,
 	id_categoria int not null,
-	cantidad_unidad varchar(20) not null, /*10 cajas x 12 piezas*/
-	precio_unidad decimal(5,2) not null /*123,79*/
+	cantidad_unidad varchar(20) not null, -- 10 cajas x 12 piezas
+	precio_unidad decimal(5,2) not null -- 123,79
 );
 go
 
 create table #producto_electronico (
 	id int identity(1,1) primary key,
 	nombre varchar(50) not null,
-	precio_dolares decimal(6,2) not null /*1700,00*/
+	precio_dolares decimal(6,2) not null -- 1700,00
 );
 go
 
-create table #catalogo (
-	id int identity(1,1) primary key,
-	id_categoria int not null,
-	nombre varchar(50) not null,
-	precio decimal(5,2) not null,
-	precio_referencia decimal(5,2) not null,
-	unidad_referencia varchar(6) not null, /*100 ml*/
-	fecha smalldatetime default getdate(),
-	constraint FK_categoria foreign key
-	(id_categoria) references op.categoria(id)
+create table catalogo (
+	id varchar(10) not null,
+	categoria varchar(50) not null,
+	nombre varchar(200) not null,
+	precio varchar(20) not null,
+	precio_referencia varchar(10) not null,
+	unidad_referencia varchar(10) not null,
+	fecha varchar(50),
+	constraint PK_catalogo primary key (id)
 );
+go
+
+drop table catalogo
+go
+/*
+create or alter procedure importarCatalogo
+as
+begin
+	BULK INSERT catalogo
+	FROM 'C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\catalogo.csv'
+	WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '0x0a',
+	CODEPAGE = '65001',
+    FIRSTROW = 2
+	);
+end
+go
+*/
+
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+go
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+go
+
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1;
+go
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1;
+go
+
+create or alter procedure importarCatalogo
+as
+begin
+	INSERT INTO catalogo (id, categoria, nombre, precio, precio_referencia, unidad_referencia, fecha)
+	SELECT *
+	FROM OPENROWSET(
+		'Microsoft.ACE.OLEDB.12.0', 
+		'Text;Database=C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\;HDR=YES;FMT=Delimited', 
+		'SELECT * FROM catalogo.csv'
+	);
+end
+
+exec importarCatalogo;
+go
+
+select top 20 * from dbo.catalogo
 go
