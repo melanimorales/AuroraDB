@@ -45,6 +45,7 @@ create table #producto_electronico (
 );
 go
 
+-- SUPUESTAMENTE NO SE PUEDE IMPORTAR A UNA TABLA TEMPORAL CON BULK INSERT
 create table catalogo (
 	id varchar(10) not null,
 	categoria varchar(50) not null,
@@ -60,6 +61,9 @@ go
 drop table catalogo
 go
 /*
+CON ESTE SP NO LO PUDE IMPORTAR PORQUE ALGUNAS LINEAS DEL ARCHIVO CONTIENEN
+UNA COMA DENTRO DE UNO DE LOS CAMPOS, QUE ADEMAS ESTA ENCERRADO EN COMILLAS DOBLES
+
 create or alter procedure importarCatalogo
 as
 begin
@@ -74,6 +78,8 @@ begin
 end
 go
 */
+/*
+ESTAS CONFIGURACIONES SON NECESARIAS PARA UTILIZAR OPENROWSET
 
 EXEC sp_configure 'show advanced options', 1;
 RECONFIGURE;
@@ -82,11 +88,13 @@ EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
 RECONFIGURE;
 go
 
+LUEGO DE EJECUTAR LAS SIGUIENTES LINEAS Y AL INTENTAR CREAR EL SP NUEVAMENTE, SE DETIENE EL SERVER
+
 EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1;
 go
 EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1;
 go
-
+*/
 create or alter procedure importarCatalogo
 as
 begin
