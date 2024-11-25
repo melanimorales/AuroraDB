@@ -7,18 +7,18 @@ Nombre y DNI: Melani Antonella Morales Castillo (42242365)
 
 Enunciado: Entrega 5
 Requisitos de seguridad
-Cuando un cliente reclama la devoluciÛn de un producto se genera una nota de crÈdito por el
+Cuando un cliente reclama la devoluci√≥n de un producto se genera una nota de cr√©dito por el
 valor del producto o un producto del mismo tipo.
-En el caso de que el cliente solicite la nota de crÈdito, solo los Supervisores tienen el permiso
+En el caso de que el cliente solicite la nota de cr√©dito, solo los Supervisores tienen el permiso
 para generarla.
-Tener en cuenta que la nota de crÈdito debe estar asociada a una Factura con estado pagada.
+Tener en cuenta que la nota de cr√©dito debe estar asociada a una Factura con estado pagada.
 Asigne los roles correspondientes para poder cumplir con este requisito.
 Por otra parte, se requiere que los datos de los empleados se encuentren encriptados, dado
-que los mismos contienen informaciÛn personal.
-La informaciÛn de las ventas es de vital importancia para el negocio, por ello se requiere que
-se establezcan polÌticas de respaldo tanto en las ventas diarias generadas como en los
+que los mismos contienen informaci√≥n personal.
+La informaci√≥n de las ventas es de vital importancia para el negocio, por ello se requiere que
+se establezcan pol√≠ticas de respaldo tanto en las ventas diarias generadas como en los
 reportes generados.
-Plantee una polÌtica de respaldo adecuada para cumplir con este requisito y justifique la
+Plantee una pol√≠tica de respaldo adecuada para cumplir con este requisito y justifique la
 misma.
 */
 
@@ -30,7 +30,7 @@ CREATE TABLE NotaDeCredito (
     FechaEmision DATETIME DEFAULT GETDATE(),
     Monto DECIMAL(18,2) NOT NULL,
     Tipo VARCHAR(50) CHECK (Tipo IN ('Valor', 'Producto')),
-    ProductoID INT NULL, -- Solo se usar· si el tipo es 'Producto'
+    ProductoID INT NULL, -- Solo se usar√° si el tipo es 'Producto'
     FOREIGN KEY (FacturaID) REFERENCES Factura(FacturaID),
     FOREIGN KEY (ClienteID) REFERENCES Cliente(ClienteID),
     FOREIGN KEY (ProductoID) REFERENCES Catalogo(ProductoID)
@@ -42,9 +42,9 @@ SELECT name, type
 FROM sys.database_principals 
 WHERE type IN ('S', 'U') -- S: SQL user, U: Windows user
 
---creamos un inicio de sesiÛn en el servidor
+--creamos un inicio de sesi√≥n en el servidor
 CREATE LOGIN SupervisorLogin 
-WITH PASSWORD = 'TuContraseÒaSegura';
+WITH PASSWORD = 'TuContrase√±aSegura';
 
 --Creamos una sesion
 USE AuroraDB;
@@ -55,23 +55,23 @@ FOR LOGIN SupervisorLogin;
 -- Creamos el rol de Supervisor
 CREATE ROLE Supervisor
 
--- Asignamos el rol Supervisor a un usuario especÌfico 
+-- Asignamos el rol Supervisor a un usuario espec√≠fico 
 ALTER ROLE Supervisor ADD MEMBER SupervisorUser
 
--- Otorgamos permiso de inserciÛn en la tabla NotaDeCredito al rol Supervisor
+-- Otorgamos permiso de inserci√≥n en la tabla NotaDeCredito al rol Supervisor
 GRANT INSERT ON NotaDeCredito TO Supervisor
 
--- Aseguramos de que solo los usuarios con el rol de Supervisor puedan generar una Nota de CrÈdito
+-- Aseguramos de que solo los usuarios con el rol de Supervisor puedan generar una Nota de Cr√©dito
 DENY INSERT ON NotaDeCredito TO PUBLIC
 
--- Creamos un procedimiento almacenado para generar la nota de crÈdito
+-- Creamos un procedimiento almacenado para generar la nota de cr√©dito
 CREATE PROCEDURE GenerarNotaCredito
     @FacturaID INT,
     @ClienteID INT,
     @Monto DECIMAL(10, 2)
 AS
 BEGIN
-    -- Verificar que la factura estÈ pagada antes de crear la nota de crÈdito
+    -- Verificar que la factura est√© pagada antes de crear la nota de cr√©dito
     IF EXISTS (SELECT 1 FROM Facturas WHERE FacturaID = @FacturaID AND Estado = 'Pagada')
     BEGIN
         INSERT INTO NotasCredito (FacturaID, ClienteID, Monto, Fecha)
@@ -79,7 +79,7 @@ BEGIN
     END
     ELSE
     BEGIN
-        RAISERROR ('La factura no est· pagada. No se puede generar la nota de crÈdito.', 16, 1);
+        RAISERROR ('La factura no est√° pagada. No se puede generar la nota de cr√©dito.', 16, 1);
     END
 END
 
@@ -95,7 +95,7 @@ UPDATE Empleados
 SET Nombre = ENCRYPTBYKEY(KEY_GUID('EmpleadosClave'), Nombre),
     Direccion = ENCRYPTBYKEY(KEY_GUID('EmpleadosClave'), Direccion)
 
--- Cerramos la clave simÈtrica
+-- Cerramos la clave sim√©trica
 CLOSE SYMMETRIC KEY EmpleadosClave
 
 
@@ -109,7 +109,7 @@ SELECT
     CAST(DECRYPTBYKEY(Direccion) AS NVARCHAR(100)) AS Direccion
 FROM Empleados
 
--- Cerramos la clave simÈtrica
+-- Cerramos la clave sim√©trica
 CLOSE SYMMETRIC KEY EmpleadosClave
 
 
@@ -122,9 +122,9 @@ CREATE TABLE Empleado (
     Telefono VARBINARY(256) NOT NULL
 );
 
--- Clave de encriptaciÛn 
+-- Clave de encriptaci√≥n 
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'ContraseniaSegura';
-CREATE CERTIFICATE EmpleadoCertificado WITH SUBJECT = 'Certificado para encriptaciÛn de datos de empleados'
+CREATE CERTIFICATE EmpleadoCertificado WITH SUBJECT = 'Certificado para encriptaci√≥n de datos de empleados'
 CREATE SYMMETRIC KEY EmpleadoClave WITH ALGORITHM = AES_256 ENCRYPTION BY CERTIFICATE EmpleadoCertificado
 
 -- Ejemplo para insertar un empleado con datos encriptados
@@ -149,15 +149,33 @@ CLOSE SYMMETRIC KEY EmpleadoClave
 
 
 ----------------Respaldos--------------------------
+--Permisos para crear ruta
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+
+--Generacion de ruta
+EXEC xp_cmdshell 'mkdir C:\Backups';
+
 --Copia de Seguridad completa
 BACKUP DATABASE AuroraDB
 TO DISK = 'C:\Backups\AuroraDB_Full.bak'
 WITH FORMAT, MEDIANAME = 'SQLServerBackups', NAME = 'Respaldo Completo Semanal'
 
+
 --Copia de seguridad Diferencial
 BACKUP DATABASE AuroraDB
 TO DISK = 'C:\Backups\AuroraDB_Diferencial.bak'
 WITH DIFFERENTIAL, NAME = 'Respaldo Diferencial'
+
+--Cambiamos a respaldo full
+ALTER DATABASE AuroraDB
+SET RECOVERY FULL;
+
+--Primer respaldo antes del log
+BACKUP DATABASE AuroraDB
+TO DISK = 'C:\Backups\AuroraDB_Full.bak';
 
 --Copia de seguridad Incremental
 BACKUP LOG AuroraDB
@@ -165,9 +183,9 @@ TO DISK = 'C:\Backups\AuroraDB_Log.bak'
 WITH NOFORMAT, NAME = 'Respaldo Incremental Diario'
 
 
--- Consultas y Reportes en SQL Server
+-------------- Consultas y Reportes en SQL Server----------------------------------
 
--- Reporte 1: Listar todas las sucursales con sus horarios y telÈfonos
+-- Reporte 1: Listar todas las sucursales con sus horarios y tel√©fonos
 SELECT Ciudad, Direccion, Horario, Telefono
 FROM dbo.InformacionComplementaria
 
@@ -187,12 +205,12 @@ SELECT c.NombreProducto, p.Proveedor, p.Costo, p.FechaImportacion
 FROM dbo.ProductosImportados p
 JOIN dbo.Catalogo c ON p.ProductoID = c.ProductoID
 
--- Reporte 5: Ventas mensuales promedio (por cada mes en el aÒo)
+-- Reporte 5: Ventas mensuales promedio (por cada mes en el a√±o)
 SELECT DATEPART(MONTH, FechaVenta) AS Mes, AVG(Total) AS PromedioVentasMensual
 FROM dbo.VentasRegistradas
 GROUP BY DATEPART(MONTH, FechaVenta)
 ORDER BY Mes
 
--- Reporte 6: Listado de todos los productos, su categorÌa y precio
+-- Reporte 6: Listado de todos los productos, su categor√≠a y precio
 SELECT NombreProducto, Categoria, Precio
 FROM dbo.Catalogo
