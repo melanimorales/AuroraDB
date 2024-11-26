@@ -46,20 +46,24 @@ create table #producto_electronico (
 go
 
 -- SUPUESTAMENTE NO SE PUEDE IMPORTAR A UNA TABLA TEMPORAL CON BULK INSERT
-create table catalogo (
-	id varchar(10) not null,
-	categoria varchar(50) not null,
-	nombre varchar(200) not null,
-	precio varchar(20) not null,
-	precio_referencia varchar(10) not null,
-	unidad_referencia varchar(10) not null,
-	fecha varchar(50),
-	constraint PK_catalogo primary key (id)
+CREATE TABLE catalogo (
+    id INT NOT NULL PRIMARY KEY,
+    categoria VARCHAR(50) NOT NULL,
+    nombre NVARCHAR(200) NOT NULL,
+    precio DECIMAL(5, 2) NOT NULL,
+    precio_referencia DECIMAL(5, 2) NOT NULL,
+    unidad_referencia VARCHAR(10) NOT NULL,
+    fecha DATETIME
 );
-go
+GO
 
-drop table catalogo
-go
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+
+--drop table catalogo
+--go
 /*
 CON ESTE SP NO LO PUDE IMPORTAR PORQUE ALGUNAS LINEAS DEL ARCHIVO CONTIENEN
 UNA COMA DENTRO DE UNO DE LOS CAMPOS, QUE ADEMAS ESTA ENCERRADO EN COMILLAS DOBLES
@@ -90,22 +94,32 @@ go
 
 LUEGO DE EJECUTAR LAS SIGUIENTES LINEAS Y AL INTENTAR CREAR EL SP NUEVAMENTE, SE DETIENE EL SERVER
 
-EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'AllowInProcess', 1;
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.16.0', N'AllowInProcess', 1;
 go
-EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.12.0', N'DynamicParameters', 1;
+EXEC sp_MSset_oledb_prop N'Microsoft.ACE.OLEDB.16.0', N'DynamicParameters', 1;
 go
 */
-create or alter procedure importarCatalogo
-as
-begin
-	INSERT INTO catalogo (id, categoria, nombre, precio, precio_referencia, unidad_referencia, fecha)
-	SELECT *
-	FROM OPENROWSET(
-		'Microsoft.ACE.OLEDB.12.0', 
-		'Text;Database=C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\;HDR=YES;FMT=Delimited', 
-		'SELECT * FROM catalogo.csv'
-	);
-end
+CREATE OR ALTER PROCEDURE importarCatalogo
+    @filePath NVARCHAR(255)
+AS
+BEGIN
+    BEGIN TRY
+        -- Usar OPENROWSET para leer los datos del CSV
+        INSERT INTO catalogo (id, categoria, nombre, precio, precio_referencia, unidad_referencia, fecha)
+        SELECT *
+        FROM OPENROWSET(
+            'Microsoft.ACE.OLEDB.16.0', 
+            'Text;Database=C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\;HDR=YES;FMT=Delimited', 
+            'SELECT * FROM catalogo.csv'
+        );
+        
+        PRINT 'Datos importados exitosamente';
+    END TRY
+    BEGIN CATCH
+        PRINT 'Error al importar los datos: ' + ERROR_MESSAGE();
+    END CATCH
+END;
+GO
 
 exec importarCatalogo;
 go

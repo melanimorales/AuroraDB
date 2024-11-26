@@ -22,6 +22,20 @@ Plantee una política de respaldo adecuada para cumplir con este requisito y just
 misma.
 */
 
+--Lista de usuarios existentes
+SELECT name, type 
+FROM sys.database_principals 
+WHERE type IN ('S', 'U') -- S: SQL user, U: Windows user
+
+--creamos un inicio de sesión en el servidor
+CREATE LOGIN SupervisorLogin 
+WITH PASSWORD = 'TuContraseñaSegura';
+
+--Creamos una sesion
+USE Com2900G04;
+CREATE USER SupervisorUser 
+FOR LOGIN SupervisorLogin;
+
 --Tabla Notas de credito
 CREATE TABLE NotaDeCredito (
     NotaCreditoID INT PRIMARY KEY IDENTITY(1,1),
@@ -36,21 +50,6 @@ CREATE TABLE NotaDeCredito (
     FOREIGN KEY (ProductoID) REFERENCES Catalogo(ProductoID)
 );
 GO
-
---Lista de usuarios existentes
-SELECT name, type 
-FROM sys.database_principals 
-WHERE type IN ('S', 'U') -- S: SQL user, U: Windows user
-
---creamos un inicio de sesión en el servidor
-CREATE LOGIN SupervisorLogin 
-WITH PASSWORD = 'TuContraseñaSegura';
-
---Creamos una sesion
-USE AuroraDB;
-CREATE USER SupervisorUser 
-FOR LOGIN SupervisorLogin;
-
 
 -- Creamos el rol de Supervisor
 CREATE ROLE Supervisor
