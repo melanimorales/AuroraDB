@@ -6,20 +6,20 @@ Nombre y DNI: Melani Antonella Morales Castillo (42242365)
 				Tomas Gabriel Osorio (43035245)
 
 Enunciado: Entrega 4
-Se requiere que importe toda la informaciÛn antes mencionada a la base de datos:
-ï Genere los objetos necesarios (store procedures, funciones, etc.) para importar los
-archivos antes mencionados. Tenga en cuenta que cada mes se recibir·n archivos de
+Se requiere que importe toda la informaci√≥n antes mencionada a la base de datos:
+‚Ä¢ Genere los objetos necesarios (store procedures, funciones, etc.) para importar los
+archivos antes mencionados. Tenga en cuenta que cada mes se recibir√°n archivos de
 novedades con la misma estructura, pero datos nuevos para agregar a cada maestro.
-ï Considere este comportamiento al generar el cÛdigo. Debe admitir la importaciÛn de
-novedades periÛdicamente.
-ï Cada maestro debe importarse con un SP distinto. No se aceptar·n scripts que
+‚Ä¢ Considere este comportamiento al generar el c√≥digo. Debe admitir la importaci√≥n de
+novedades peri√≥dicamente.
+‚Ä¢ Cada maestro debe importarse con un SP distinto. No se aceptar√°n scripts que
 realicen tareas por fuera de un SP.
-ï La estructura/esquema de las tablas a generar ser· decisiÛn suya. Puede que deba
-realizar procesos de transformaciÛn sobre los maestros recibidos para adaptarlos a la
+‚Ä¢ La estructura/esquema de las tablas a generar ser√° decisi√≥n suya. Puede que deba
+realizar procesos de transformaci√≥n sobre los maestros recibidos para adaptarlos a la
 estructura requerida.
-ï Los archivos CSV/JSON no deben modificarse. En caso de que haya datos mal
-cargados, incompletos, errÛneos, etc., deber· contemplarlo y realizar las correcciones
-en el fuente SQL. (SerÌa una excepciÛn si el archivo est· malformado y no es posible
+‚Ä¢ Los archivos CSV/JSON no deben modificarse. En caso de que haya datos mal
+cargados, incompletos, err√≥neos, etc., deber√° contemplarlo y realizar las correcciones
+en el fuente SQL. (Ser√≠a una excepci√≥n si el archivo est√° malformado y no es posible
 interpretarlo como JSON o CSV). 
 */
 
@@ -32,6 +32,63 @@ RECONFIGURE;
 
 USE Com2900G04;
 go
+
+----------------------------------SP Importacion CSV-----------------------------------------------------
+
+----------------------------------catalogo.csv-------------------------------
+
+sp_configure 'show advanced options', 1;
+RECONFIGURE;
+sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+
+
+
+CREATE OR ALTER PROCEDURE op.importarCatalogo
+	@ruta varchar(1000)
+AS
+BEGIN
+	BEGIN TRY
+		CREATE TABLE #catalogo (
+		    id VARCHAR(max),
+			categoria VARCHAR(max),
+		    nombre VARCHAR(max),
+		    precio VARCHAR(max),
+		    precio_referencia VARCHAR(max),
+			unidad_referencia VARCHAR(max),
+			fecha VARCHAR(max)
+		);
+		
+		DECLARE @sql NVARCHAR(MAX) = N'
+		    BULK INSERT #catalogo
+		    FROM ''' + @ruta + ''' 
+		    WITH (
+		        FIELDTERMINATOR = '','', -- Delimitador de campos
+		        ROWTERMINATOR = ''\n'',  -- Fin de l√≠nea
+		        FIRSTROW = 2           -- Omitir encabezado
+		    );'
+
+		EXEC sp_executesql @sql;
+	END TRY
+	BEGIN CATCH
+	    PRINT 'Error en la importaci√≥n de catalogo.csv' + ERROR_MESSAGE();
+	END CATCH;
+
+	INSERT INTO op.producto (nombre, categoria, precio, fecha)
+	SELECT c.nombre, cp.linea_producto AS categoria, CAST(ROUND(c.precio, 2) AS decimal(10,2)) AS precio, c.fecha
+	FROM #catalogo AS c
+	LEFT JOIN op.clasificacionProducto AS cp
+	ON cp.producto = c.categoria;
+	
+	DROP TABLE #catalogo;
+END;
+go
+
+/*SELECT * FROM OPENROWSET(
+		        'Microsoft.ACE.OLEDB.12.0', 
+		        'Text;Database=C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\;HDR=YES;FMT=Delimited(,)', 
+		        'SELECT * FROM catalogo.csv'
+		    );*/
 
 -------------------------------"Ventas Registradas"----------------------------
 
@@ -56,60 +113,87 @@ BEGIN
 			identificador_pago varchar(50)
 		);
 
-		DECLARE @sql NVARCHAR(MAX);
-		SET @sql = N'
-			BULK INSERT #ventasRegistradas
-			FROM ''' + @ruta + N'''
-			WITH (
-			    CHECK_CONSTRAINTS,
-			    FORMAT = ''CSV'',
-			    CODEPAGE = ''65001'', -- UTF-8
-			    FIRSTROW = 2,
-			    FIELDTERMINATOR = '';'',
-			    ROWTERMINATOR = ''\n''
-			);';
+		DECLARE @sql NVARCHAR(MAX) = N'
+		    BULK INSERT #ventasRegistradas
+		    FROM ''' + @ruta + ''' 
+		    WITH (
+		        FIELDTERMINATOR = '';'', -- Delimitador de campos
+		        ROWTERMINATOR = ''\n'',  -- Fin de l√≠nea
+		        FIRSTROW = 2           -- Omitir encabezado
+		    );'
 
 	    EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de Ventas_registradas.csv' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de Ventas_registradas.csv' + ERROR_MESSAGE();
 	END CATCH;
 
+	-- Insertar en op.venta
 	INSERT INTO op.venta (id_sucursal, tipo_cliente, fecha, hora, id_empleado)
     SELECT s.id AS id_sucursal, CAST(tipo_cliente AS char(6)),
 			CAST(vr.fecha AS date), CAST(vr.hora AS time), CAST(vr.empleado AS int)
     FROM #ventasRegistradas AS vr
-	JOIN sucursal AS s ON vr.ciudad = s.ciudad;
+	JOIN rrhh.sucursal AS s ON vr.ciudad = s.ciudad;
 
+	-- Insertar en op.detalleVenta
     INSERT INTO op.detalleVenta (id_venta, id_producto, cantidad, precio_unitario)
     SELECT 
         (SELECT id FROM op.venta 
-         WHERE legajo_empleado = vr.legajo_empleado 
+         WHERE id_empleado = vr.empleado 
            AND fecha = vr.fecha 
            AND hora = vr.hora) AS id_venta,
-        p.id AS id_producto, CAST(vr.cantidad AS int), CAST(vr.precio_unitario AS int)
+        p.id AS id_producto, 
+        CAST(vr.cantidad AS int), 
+        CAST(vr.precio_unitario AS decimal(10,2))
     FROM #ventasRegistradas vr
     JOIN op.producto p ON p.nombre = vr.producto;
 
-    INSERT INTO op.factura (id, tipo_factura, id_venta, total_sin_IVA, cuit, estado)
-    SELECT CAST(vr.id_factura AS char(11)), CAST(vr.tipo_factura AS char(1)),
-        (SELECT id FROM op.venta 
-         WHERE legajo_empleado = vr.legajo_empleado 
-           AND fecha = vr.fecha 
-           AND hora = vr.hora) AS id_venta,
-		CAST(vr.cantidad AS int) * CAST(vr.precio_unitario AS decimal(10,2)) AS total_sin_IVA,
-		(SELECT TOP 1 cuit FROM rrhh.super) AS cuit, 'Pagada' AS estado
-    FROM #ventasRegistradas vr;
+	--- Insertar en op.factura solo si no existe un registro con la misma clave primaria (id_factura)
+INSERT INTO op.factura (id, tipo_factura, id_venta, total_sin_IVA, cuit, estado)
+SELECT 
+    CAST(vr.id_factura AS char(11)), 
+    CAST(vr.tipo_factura AS char(1)),
+    v.id AS id_venta,
+    CAST(vr.cantidad AS int) * CAST(vr.precio_unitario AS decimal(10,2)) AS total_sin_IVA,
+    (SELECT TOP 1 cuit FROM rrhh.super) AS cuit, 
+    'Pagada' AS estado
+FROM #ventasRegistradas vr
+JOIN op.venta v 
+    ON v.id_empleado = vr.empleado 
+    AND v.fecha = vr.fecha 
+    AND v.hora = vr.hora
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM op.factura 
+    WHERE id = CAST(vr.id_factura AS char(11))  
+);
 
-    INSERT INTO op.pago (id, id_factura, id_medio_pago, monto, fecha, hora)
-    SELECT vr.identificador_pago, vr.id_factura, mp.id AS id_medio_pago,
-			vr.cantidad * vr.precio_unitario AS monto, vr.fecha, vr.hora
-    FROM #ventasRegistradas vr
-    JOIN op.medioPago mp ON mp.medio = vr.medio_pago;
+-- Insertar en op.pago solo si no existe un registro con la misma clave primaria
+INSERT INTO op.pago (id, id_factura, id_medio_pago, monto, fecha, hora)
+SELECT 
+    vr.identificador_pago, 
+    vr.id_factura, 
+    mp.id AS id_medio_pago,
+    CAST(vr.cantidad AS int) * CAST(vr.precio_unitario AS decimal(10,2)) AS monto, 
+    vr.fecha, 
+    vr.hora
+FROM #ventasRegistradas vr
+JOIN op.medioPago mp ON mp.medio = vr.medio_pago
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM op.pago 
+    WHERE id = vr.identificador_pago
+);
+
+    
 
 	DROP TABLE #ventasRegistradas;
 END;
+
+EXEC op.importarVentasRegistradas @ruta = N'C:\Users\brand\OneDrive\Escritorio\TP Base de datos aplicada\TP_integrador_Archivos\Ventas_registradas.csv';
 go
+
+
 
 /*CREATE TABLE #ventasRegistradas (
 			id varchar(max),
@@ -146,9 +230,16 @@ go
 drop table #ventasRegistradas;
 go*/
 
+-- Habilitar configuraciones avanzadas
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+
 ---------------------------------ARCHIVO EXCEL--------------------------------------
 
-------------------------InformaciÛn Complementaria----------------------------------
+------------------------Informaci√≥n Complementaria----------------------------------
 
 --------------------------Sucursal------------------------------------------------------
 
@@ -177,7 +268,7 @@ BEGIN
         EXEC sp_executesql @sql;
     END TRY
     BEGIN CATCH
-        PRINT 'Error en la importaciÛn de Informacion_complementaria.xlsx: ' + ERROR_MESSAGE();
+        PRINT 'Error en la importaci√≥n de Informacion_complementaria.xlsx: ' + ERROR_MESSAGE();
     END CATCH;
 
 	INSERT INTO rrhh.sucursal(ciudad, reemplazar_por, direccion, horario, telefono)
@@ -220,14 +311,14 @@ BEGIN
 	    INSERT INTO #informacionComplementariaEmpleado
 	    SELECT * FROM OPENROWSET(
 	        ''Microsoft.ACE.OLEDB.12.0'', 
-	        ''Excel 12.0;Database=T:\Documentos\UNLaM\Base_datos_aplicada\TP\TP_integrador_Archivos\Informacion_complementaria.xlsx;HDR=YES'',   -- + @ruta + N
+	        ''Excel 12.0;Database=' + @ruta + N';HDR=YES'',
 	        ''SELECT * FROM [Empleados$]''
 	    );';
 		
 		EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de Informacion_complementaria.xlsx: ' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de Informacion_complementaria.xlsx: ' + ERROR_MESSAGE();
 	END CATCH;
 
 	INSERT INTO rrhh.empleado(legajo, nombre, apellido, dni, direccion, email_personal, email_empresa, cuil, cargo, id_sucursal, turno)
@@ -271,7 +362,7 @@ BEGIN
 		EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de Informacion_complementaria.xlsx' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de Informacion_complementaria.xlsx' + ERROR_MESSAGE();
 	END CATCH;
 
 	INSERT INTO op.medioPago (medio, traduccion)
@@ -312,7 +403,7 @@ BEGIN
 		EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de Informacion_complementaria.xlsx' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de Informacion_complementaria.xlsx' + ERROR_MESSAGE();
 	END CATCH;
 
 	INSERT INTO op.clasificacionProducto (linea_producto, producto)
@@ -351,13 +442,13 @@ BEGIN TRY
     ');
 END TRY
 BEGIN CATCH
-    PRINT 'Error en la importaciÛn de Informacion_complementaria.xlsx';
+    PRINT 'Error en la importaci√≥n de Informacion_complementaria.xlsx';
 END CATCH;
 
 -- Opcional: Visualizar los datos importados (para verificar)
 SELECT * FROM #InfoCatalogo;
 
--- Limpieza: eliminar la tabla temporal despuÈs de su uso
+-- Limpieza: eliminar la tabla temporal despu√©s de su uso
 Drop TABLE #InfoCatalogo;
 
 SELECT * FROM OPENROWSET(
@@ -367,55 +458,7 @@ SELECT * FROM OPENROWSET(
 	    );*/
 
 
-----------------------------------SP Importacion CSV-----------------------------------------------------
 
-----------------------------------catalogo.csv-------------------------------
-
-CREATE OR ALTER PROCEDURE op.importarCatalogo
-	@ruta varchar(1000)
-AS
-BEGIN
-	BEGIN TRY
-		CREATE TABLE #catalogo (
-		    id VARCHAR(10),
-			categoria VARCHAR(100),
-		    nombre VARCHAR(500),
-		    precio VARCHAR(10),
-		    precio_referencia VARCHAR(10),
-			unidad_referencia VARCHAR(20),
-			fecha VARCHAR(50)
-		);
-		
-		DECLARE @sql NVARCHAR(MAX) = N'
-		    INSERT INTO #catalogo (id, categoria, nombre, precio, precio_referencia, unidad_referencia, fecha)
-			SELECT * FROM OPENROWSET(
-		        ''Microsoft.ACE.OLEDB.12.0'', 
-		        ''Text;Database=' + @ruta + N';HDR=YES;FMT=Delimited(,)'', 
-		        ''SELECT * FROM catalogo.csv''
-		    );';
-
-		EXEC sp_executesql @sql;
-	END TRY
-	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de catalogo.csv' + ERROR_MESSAGE();
-	END CATCH;
-
-	INSERT INTO op.producto (nombre, categoria, precio, precio_referencia, unidad_referencia, fecha)
-	SELECT c.nombre, cp.linea_producto AS categoria, CAST(ROUND(c.precio, 2) AS decimal(10,2)) AS precio,
-			CAST(ROUND(c.precio_referencia, 2) AS decimal(5,2)) AS precio_referencia, c.unidad_referencia, c.fecha
-	FROM #catalogo AS c
-	LEFT JOIN op.clasificacionProducto AS cp
-	ON cp.producto = c.categoria;
-	
-	DROP TABLE #catalogo;
-END;
-go
-
-/*SELECT * FROM OPENROWSET(
-		        'Microsoft.ACE.OLEDB.12.0', 
-		        'Text;Database=C:\Users\Tomas Osorio\Desktop\TP_integrador_Archivos\Productos\;HDR=YES;FMT=Delimited(,)', 
-		        'SELECT * FROM catalogo.csv'
-		    );*/
 
 
 ------------------------------"Productos Importados"------------------------------------
@@ -448,7 +491,7 @@ BEGIN
 		EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de Productos_importados.xlsx' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de Productos_importados.xlsx' + ERROR_MESSAGE();
 	END CATCH;
 
 	INSERT INTO op.producto (nombre, categoria, precio, cantidad_unidad, proveedor)
@@ -490,7 +533,7 @@ BEGIN
 		EXEC sp_executesql @sql;
 	END TRY
 	BEGIN CATCH
-	    PRINT 'Error en la importaciÛn de ElectronicAccessories.xlsx' + ERROR_MESSAGE();
+	    PRINT 'Error en la importaci√≥n de ElectronicAccessories.xlsx' + ERROR_MESSAGE();
 	END CATCH;
 
 	INSERT INTO op.producto (nombre, categoria, precio, precio_dolares)
