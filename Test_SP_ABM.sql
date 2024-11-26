@@ -8,7 +8,7 @@ BEGIN TRY
         @direccion = 'Av. Libertador 1234', 
         @horario = '9:00 - 18:00', 
         @telefono = '1234567890';
-    PRINT 'Test de ingreso correcto completado con Èxito.';
+    PRINT 'Test de ingreso correcto completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarSucursal: ' + ERROR_MESSAGE();
@@ -30,7 +30,7 @@ BEGIN TRY
         @cargo = 'Analista', 
         @id_sucursal = 1, 
         @turno = 'TM';
-    PRINT 'Test de ingresarEmpleado (Empleado 1) completado con Èxito.';
+    PRINT 'Test de ingresarEmpleado (Empleado 1) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarEmpleado (Empleado 1): ' + ERROR_MESSAGE();
@@ -45,9 +45,9 @@ BEGIN TRY
         @email_laboral = 'maria.gomez@empresa.com', 
         @cuil = '20-87654321-9', 
         @cargo = 'Desarrolladora', 
-        @id_sucursal = 2, 
+        @id_sucursal = 1, 
         @turno = 'TT';
-    PRINT 'Test de ingresarEmpleado (Empleado 2) completado con Èxito.';
+    PRINT 'Test de ingresarEmpleado (Empleado 2) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarEmpleado (Empleado 2): ' + ERROR_MESSAGE();
@@ -64,7 +64,7 @@ BEGIN TRY
         @cargo = 'Gerente', 
         @id_sucursal = 1, 
         @turno = 'Jornada completa';
-    PRINT 'Test de ingresarEmpleado (Empleado 3) completado con Èxito.';
+    PRINT 'Test de ingresarEmpleado (Empleado 3) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarEmpleado (Empleado 3): ' + ERROR_MESSAGE();
@@ -79,8 +79,8 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarMedioPago 
         @valor = '12345678901', 
-        @descripcion = 'Tarjeta de crÈdito';
-    PRINT 'Test de ingresarMedioPago (Medio de pago 1) completado con Èxito.';
+        @descripcion = 'Tarjeta de cr√©dito';
+    PRINT 'Test de ingresarMedioPago (Medio de pago 1) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarMedioPago (Medio de pago 1): ' + ERROR_MESSAGE();
@@ -90,7 +90,7 @@ BEGIN TRY
     EXEC op.ingresarMedioPago 
         @valor = '1234567890', 
         @descripcion = 'Transferencia bancaria';
-    PRINT 'Test de ingresarMedioPago (Medio de pago 2) completado con Èxito.';
+    PRINT 'Test de ingresarMedioPago (Medio de pago 2) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarMedioPago (Medio de pago 2): ' + ERROR_MESSAGE();
@@ -104,17 +104,17 @@ END CATCH;
 -----Categoria-----
 BEGIN TRY
     EXEC op.ingresarCategoria 
-        @descripcion = 'ElectrÛnica';
-    PRINT 'Test de ingresarCategoria (ElectrÛnica) completado con Èxito.';
+        @descripcion = 'Electr√≥nica';
+    PRINT 'Test de ingresarCategoria (Electr√≥nica) completado con √©xito.';
 END TRY
 BEGIN CATCH
-    PRINT 'Error en el test de ingresarCategoria (ElectrÛnica): ' + ERROR_MESSAGE();
+    PRINT 'Error en el test de ingresarCategoria (Electr√≥nica): ' + ERROR_MESSAGE();
 END CATCH;
 
 BEGIN TRY
     EXEC op.ingresarCategoria 
         @descripcion = 'Ropa y Accesorios';
-    PRINT 'Test de ingresarCategoria (Ropa y Accesorios) completado con Èxito.';
+    PRINT 'Test de ingresarCategoria (Ropa y Accesorios) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarCategoria (Ropa y Accesorios): ' + ERROR_MESSAGE();
@@ -123,7 +123,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarCategoria 
         @descripcion = 'Alimentos y Bebidas';
-    PRINT 'Test de ingresarCategoria (Alimentos y Bebidas) completado con Èxito.';
+    PRINT 'Test de ingresarCategoria (Alimentos y Bebidas) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarCategoria (Alimentos y Bebidas): ' + ERROR_MESSAGE();
@@ -131,17 +131,17 @@ END CATCH;
 
 BEGIN TRY
     EXEC op.ingresarCategoria 
-        @descripcion = 'TecnologÌa';
-    PRINT 'Test de ingresarCategoria (TecnologÌa) completado con Èxito.';
+        @descripcion = 'Tecnolog√≠a';
+    PRINT 'Test de ingresarCategoria (Tecnolog√≠a) completado con √©xito.';
 END TRY
 BEGIN CATCH
-    PRINT 'Error en el test de ingresarCategoria (TecnologÌa): ' + ERROR_MESSAGE();
+    PRINT 'Error en el test de ingresarCategoria (Tecnolog√≠a): ' + ERROR_MESSAGE();
 END CATCH;
 
 BEGIN TRY
     EXEC op.ingresarCategoria 
         @descripcion = 'Juguetes y Juegos';
-    PRINT 'Test de ingresarCategoria (Juguetes y Juegos) completado con Èxito.';
+    PRINT 'Test de ingresarCategoria (Juguetes y Juegos) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarCategoria (Juguetes y Juegos): ' + ERROR_MESSAGE();
@@ -150,7 +150,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarCategoria 
         @descripcion = 'Herramientas y Accesorios';
-    PRINT 'Test de ingresarCategoria (Herramientas y Accesorios) completado con Èxito.';
+    PRINT 'Test de ingresarCategoria (Herramientas y Accesorios) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarCategoria (Herramientas y Accesorios): ' + ERROR_MESSAGE();
@@ -165,7 +165,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProveedor 
         @nombre = 'Proveedor A';
-    PRINT 'Test de ingresarProveedor (Proveedor A) completado con Èxito.';
+    PRINT 'Test de ingresarProveedor (Proveedor A) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarProveedor (Proveedor A): ' + ERROR_MESSAGE();
@@ -174,7 +174,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProveedor 
         @nombre = 'Distribuidora XYZ';
-    PRINT 'Test de ingresarProveedor (Distribuidora XYZ) completado con Èxito.';
+    PRINT 'Test de ingresarProveedor (Distribuidora XYZ) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarProveedor (Distribuidora XYZ): ' + ERROR_MESSAGE();
@@ -183,7 +183,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProveedor 
         @nombre = 'Suministros Globales';
-    PRINT 'Test de ingresarProveedor (Suministros Globales) completado con Èxito.';
+    PRINT 'Test de ingresarProveedor (Suministros Globales) completado con √©xito.';
 END TRY
 BEGIN CATCH
     PRINT 'Error en el test de ingresarProveedor (Suministros Globales): ' + ERROR_MESSAGE();
@@ -191,11 +191,11 @@ END CATCH;
 
 BEGIN TRY
     EXEC op.ingresarProveedor 
-        @nombre = 'TecnologÌa Plus S.A.';
-    PRINT 'Test de ingresarProveedor (TecnologÌa Plus S.A.) completado con Èxito.';
+        @nombre = 'Tecnolog√≠a Plus S.A.';
+    PRINT 'Test de ingresarProveedor (Tecnolog√≠a Plus S.A.) completado con √©xito.';
 END TRY
 BEGIN CATCH
-    PRINT 'Error en el test de ingresarProveedor (TecnologÌa Plus S.A.): ' + ERROR_MESSAGE();
+    PRINT 'Error en el test de ingresarProveedor (Tecnolog√≠a Plus S.A.): ' + ERROR_MESSAGE();
 END CATCH;
 
 
@@ -209,7 +209,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Laptop HP', 
-        @nombre_categoria = 'ElectrÛnica',
+        @nombre_categoria = 'Electr√≥nica',
         @precio = 500.00,
         @precio_referencia = 600.00,
         @unidad_referencia = 'Unidad',
@@ -225,7 +225,7 @@ END CATCH;
 -- Producto 2
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Mouse inal·mbrico', 
+        @nombre = 'Mouse inal√°mbrico', 
         @nombre_categoria = 'Accesorios',
         @precio = 25.00,
         @precio_referencia = 30.00,
@@ -242,14 +242,14 @@ END CATCH;
 -- Producto 3
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Teclado mec·nico', 
+        @nombre = 'Teclado mec√°nico', 
         @nombre_categoria = 'Accesorios',
         @precio = 80.00,
         @precio_referencia = 100.00,
         @unidad_referencia = 'Unidad',
         @cantidad_unidad = '1',
         @precio_dolares = 85.00,
-        @nombre_proveedor = 'TecnologÌa Plus';
+        @nombre_proveedor = 'Tecnolog√≠a Plus';
     PRINT 'Producto 3 ingresado exitosamente.';
 END TRY
 BEGIN CATCH
@@ -260,7 +260,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Monitor 24 pulgadas', 
-        @nombre_categoria = 'ElectrÛnica',
+        @nombre_categoria = 'Electr√≥nica',
         @precio = 150.00,
         @precio_referencia = 200.00,
         @unidad_referencia = 'Unidad',
@@ -294,13 +294,13 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Smartphone Xiaomi', 
-        @nombre_categoria = 'ElectrÛnica',
+        @nombre_categoria = 'Electr√≥nica',
         @precio = 300.00,
         @precio_referencia = 350.00,
         @unidad_referencia = 'Unidad',
         @cantidad_unidad = '1',
         @precio_dolares = 310.00,
-        @nombre_proveedor = 'TecnologÌa Plus';
+        @nombre_proveedor = 'Tecnolog√≠a Plus';
     PRINT 'Producto 6 ingresado exitosamente.';
 END TRY
 BEGIN CATCH
@@ -311,7 +311,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Tablet Samsung', 
-        @nombre_categoria = 'ElectrÛnica',
+        @nombre_categoria = 'Electr√≥nica',
         @precio = 220.00,
         @precio_referencia = 260.00,
         @unidad_referencia = 'Unidad',
@@ -327,7 +327,7 @@ END CATCH;
 -- Producto 8
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Cargador r·pido', 
+        @nombre = 'Cargador r√°pido', 
         @nombre_categoria = 'Accesorios',
         @precio = 15.00,
         @precio_referencia = 20.00,
@@ -351,7 +351,7 @@ BEGIN TRY
         @unidad_referencia = 'Unidad',
         @cantidad_unidad = '1',
         @precio_dolares = 28.00,
-        @nombre_proveedor = 'TecnologÌa Plus';
+        @nombre_proveedor = 'Tecnolog√≠a Plus';
     PRINT 'Producto 9 ingresado exitosamente.';
 END TRY
 BEGIN CATCH
@@ -378,7 +378,7 @@ END CATCH;
 -- Producto 11
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Silla ergonÛmica', 
+        @nombre = 'Silla ergon√≥mica', 
         @nombre_categoria = 'Muebles',
         @precio = 120.00,
         @precio_referencia = 150.00,
@@ -412,7 +412,7 @@ END CATCH;
 -- Producto 13
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'L·mpara LED', 
+        @nombre = 'L√°mpara LED', 
         @nombre_categoria = 'Muebles',
         @precio = 45.00,
         @precio_referencia = 55.00,
@@ -429,8 +429,8 @@ END CATCH;
 -- Producto 14
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Cafetera elÈctrica', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre = 'Cafetera el√©ctrica', 
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 80.00,
         @precio_referencia = 100.00,
         @unidad_referencia = 'Unidad',
@@ -446,8 +446,8 @@ END CATCH;
 -- Producto 15
 BEGIN TRY
     EXEC op.ingresarProducto 
-        @nombre = 'Tetera elÈctrica', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre = 'Tetera el√©ctrica', 
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 40.00,
         @precio_referencia = 50.00,
         @unidad_referencia = 'Unidad',
@@ -464,7 +464,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Licuadora', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 60.00,
         @precio_referencia = 75.00,
         @unidad_referencia = 'Unidad',
@@ -481,7 +481,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Aspiradora', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 150.00,
         @precio_referencia = 180.00,
         @unidad_referencia = 'Unidad',
@@ -498,7 +498,7 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Ventilador', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 30.00,
         @precio_referencia = 40.00,
         @unidad_referencia = 'Unidad',
@@ -515,13 +515,13 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Secador de cabello', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 20.00,
         @precio_referencia = 30.00,
         @unidad_referencia = 'Unidad',
         @cantidad_unidad = '1',
         @precio_dolares = 22.00,
-        @nombre_proveedor = 'ElectrodomÈsticos S.A.';
+        @nombre_proveedor = 'Electrodom√©sticos S.A.';
     PRINT 'Producto 19 ingresado exitosamente.';
 END TRY
 BEGIN CATCH
@@ -532,13 +532,13 @@ END CATCH;
 BEGIN TRY
     EXEC op.ingresarProducto 
         @nombre = 'Plancha de ropa', 
-        @nombre_categoria = 'ElectrodomÈsticos',
+        @nombre_categoria = 'Electrodom√©sticos',
         @precio = 25.00,
         @precio_referencia = 35.00,
         @unidad_referencia = 'Unidad',
         @cantidad_unidad = '1',
         @precio_dolares = 27.00,
-        @nombre_proveedor = 'ElectrodomÈsticos S.A.';
+        @nombre_proveedor = 'Electrodom√©sticos S.A.';
     PRINT 'Producto 20 ingresado exitosamente.';
 END TRY
 BEGIN CATCH
@@ -558,10 +558,10 @@ BEGIN TRY
         @id_sucursal = 1,
         @tipo_cliente = 'F',
         @genero = 'M',
-        @id_producto = 3,  -- SupÛn que el producto con ID 3 es v·lido
+        @id_producto = 3,  -- Sup√≥n que el producto con ID 3 es v√°lido
         @cantidad = 2,
         @fecha = '2024-11-01 14:30',
-        @id_medio_pago = 2,  -- SupÛn que el medio de pago con ID 2 es v·lido
+        @id_medio_pago = 2,  -- Sup√≥n que el medio de pago con ID 2 es v√°lido
         @legajo_empleado = 101,
         @identificador_pago = 'IDP000123456789012345';
     PRINT 'Venta 1 ingresada exitosamente.';
@@ -577,10 +577,10 @@ BEGIN TRY
         @id_sucursal = 1,
         @tipo_cliente = 'J',
         @genero = 'F',
-        @id_producto = 5,  -- SupÛn que el producto con ID 5 es v·lido
+        @id_producto = 5,  -- Sup√≥n que el producto con ID 5 es v√°lido
         @cantidad = 3,
         @fecha = '2024-11-02 09:15',
-        @id_medio_pago = 2,  -- SupÛn que el medio de pago con ID 3 es v·lido
+        @id_medio_pago = 2,  -- Sup√≥n que el medio de pago con ID 3 es v√°lido
         @legajo_empleado = 102,
         @identificador_pago = 'IDP001234567890123456';
     PRINT 'Venta 2 ingresada exitosamente.';
@@ -596,10 +596,10 @@ BEGIN TRY
         @id_sucursal = 1,
         @tipo_cliente = 'F',
         @genero = 'M',
-        @id_producto = 7,  -- SupÛn que el producto con ID 7 es v·lido
+        @id_producto = 7,  -- Sup√≥n que el producto con ID 7 es v√°lido
         @cantidad = 1,
         @fecha = '2024-11-03 17:45',
-        @id_medio_pago = 1,  -- SupÛn que el medio de pago con ID 1 es v·lido
+        @id_medio_pago = 1,  -- Sup√≥n que el medio de pago con ID 1 es v√°lido
         @legajo_empleado = 103,
         @identificador_pago = 'IDP002345678901234567';
     PRINT 'Venta 3 ingresada exitosamente.';
