@@ -7,70 +7,76 @@ Nombre y DNI: Melani Antonella Morales Castillo (42242365)
 
 Enunciado: Entrega 5
 Requisitos de seguridad
-Cuando un cliente reclama la devoluciÛn de un producto se genera una nota de crÈdito por el
+Cuando un cliente reclama la devoluci√≥n de un producto se genera una nota de cr√©dito por el
 valor del producto o un producto del mismo tipo.
-En el caso de que el cliente solicite la nota de crÈdito, solo los Supervisores tienen el permiso
+En el caso de que el cliente solicite la nota de cr√©dito, solo los Supervisores tienen el permiso
 para generarla.
-Tener en cuenta que la nota de crÈdito debe estar asociada a una Factura con estado pagada.
+Tener en cuenta que la nota de cr√©dito debe estar asociada a una Factura con estado pagada.
 Asigne los roles correspondientes para poder cumplir con este requisito.
 Por otra parte, se requiere que los datos de los empleados se encuentren encriptados, dado
-que los mismos contienen informaciÛn personal.
-La informaciÛn de las ventas es de vital importancia para el negocio, por ello se requiere que
-se establezcan polÌticas de respaldo tanto en las ventas diarias generadas como en los
+que los mismos contienen informaci√≥n personal.
+La informaci√≥n de las ventas es de vital importancia para el negocio, por ello se requiere que
+se establezcan pol√≠ticas de respaldo tanto en las ventas diarias generadas como en los
 reportes generados.
-Plantee una polÌtica de respaldo adecuada para cumplir con este requisito y justifique la
+Plantee una pol√≠tica de respaldo adecuada para cumplir con este requisito y justifique la
 misma.
 */
 
---Lista de usuarios existentes
-SELECT name, type 
-FROM sys.database_principals 
-WHERE type IN ('S', 'U') -- S: SQL user, U: Windows user
-
---creamos un inicio de sesiÛn en el servidor
-CREATE LOGIN SupervisorLogin 
-WITH PASSWORD = 'TuContraseÒaSegura';
-
---Creamos una sesion
-USE Com2900G04;
-CREATE USER SupervisorUser 
-FOR LOGIN SupervisorLogin;
+USE Com2900G04
+GO
 
 --Tabla Notas de credito
-CREATE TABLE NotaDeCredito (
+CREATE OR ALTER TABLE NotaDeCredito (
     NotaCreditoID INT PRIMARY KEY IDENTITY(1,1),
     FacturaID INT NOT NULL,
     ClienteID INT NOT NULL,
     FechaEmision DATETIME DEFAULT GETDATE(),
     Monto DECIMAL(18,2) NOT NULL,
     Tipo VARCHAR(50) CHECK (Tipo IN ('Valor', 'Producto')),
-    ProductoID INT NULL, -- Solo se usar· si el tipo es 'Producto'
-    FOREIGN KEY (FacturaID) REFERENCES Factura(FacturaID),
-    FOREIGN KEY (ClienteID) REFERENCES Cliente(ClienteID),
-    FOREIGN KEY (ProductoID) REFERENCES Catalogo(ProductoID)
-);
+    ProductoID INT NULL, -- Solo se usar√° si el tipo es 'Producto'
+GO
+
+--Lista de usuarios existentes
+SELECT name, type 
+FROM sys.database_principals 
+WHERE type IN ('S', 'U') -- S: SQL user, U: Windows user
+GO
+
+--creamos un inicio de sesi√≥n en el servidor
+CREATE LOGIN SupervisorLogin 
+WITH PASSWORD = 'TuContrase√±aSegura';
+GO
+
+--Creamos una sesion
+USE Com2900G04
+CREATE USER SupervisorUser 
+FOR LOGIN SupervisorLogin
 GO
 
 -- Creamos el rol de Supervisor
 CREATE ROLE Supervisor
+GO
 
--- Asignamos el rol Supervisor a un usuario especÌfico 
+-- Asignamos el rol Supervisor a un usuario espec√≠fico 
 ALTER ROLE Supervisor ADD MEMBER SupervisorUser
+GO
 
--- Otorgamos permiso de inserciÛn en la tabla NotaDeCredito al rol Supervisor
+-- Otorgamos permiso de inserci√≥n en la tabla NotaDeCredito al rol Supervisor
 GRANT INSERT ON NotaDeCredito TO Supervisor
+GO
 
--- Aseguramos de que solo los usuarios con el rol de Supervisor puedan generar una Nota de CrÈdito
+-- Aseguramos de que solo los usuarios con el rol de Supervisor puedan generar una Nota de Cr√©dito
 DENY INSERT ON NotaDeCredito TO PUBLIC
+GO
 
--- Creamos un procedimiento almacenado para generar la nota de crÈdito
+-- Creamos un procedimiento almacenado para generar la nota de cr√©dito
 CREATE PROCEDURE GenerarNotaCredito
     @FacturaID INT,
     @ClienteID INT,
     @Monto DECIMAL(10, 2)
 AS
 BEGIN
-    -- Verificar que la factura estÈ pagada antes de crear la nota de crÈdito
+    -- Verificar que la factura est√© pagada antes de crear la nota de cr√©dito
     IF EXISTS (SELECT 1 FROM Facturas WHERE FacturaID = @FacturaID AND Estado = 'Pagada')
     BEGIN
         INSERT INTO NotasCredito (FacturaID, ClienteID, Monto, Fecha)
@@ -78,120 +84,195 @@ BEGIN
     END
     ELSE
     BEGIN
-        RAISERROR ('La factura no est· pagada. No se puede generar la nota de crÈdito.', 16, 1);
+        RAISERROR ('La factura no est√° pagada. No se puede generar la nota de cr√©dito.', 16, 1);
     END
 END
-
+GO
 -- Otorgamos permisos solo al rol Supervisor
 GRANT EXECUTE ON GenerarNotaCredito TO Supervisor
+GO
 
--- Abrimos la clave para poder cifrar los datos
-OPEN SYMMETRIC KEY EmpleadosClave
-DECRYPTION BY CERTIFICATE EmpleadosCertificado
-
--- Ejemplo de cifrado de una columna de la tabla Empleados
-UPDATE Empleados
-SET Nombre = ENCRYPTBYKEY(KEY_GUID('EmpleadosClave'), Nombre),
-    Direccion = ENCRYPTBYKEY(KEY_GUID('EmpleadosClave'), Direccion)
-
--- Cerramos la clave simÈtrica
-CLOSE SYMMETRIC KEY EmpleadosClave
-
-
--- Abrimos la clave para poder descifrar los datos
-OPEN SYMMETRIC KEY EmpleadosClave
-DECRYPTION BY CERTIFICATE EmpleadosCertificado
-
--- Seleccionamos y desciframos datos
-SELECT
-    CAST(DECRYPTBYKEY(Nombre) AS NVARCHAR(50)) AS Nombre,
-    CAST(DECRYPTBYKEY(Direccion) AS NVARCHAR(100)) AS Direccion
-FROM Empleados
-
--- Cerramos la clave simÈtrica
-CLOSE SYMMETRIC KEY EmpleadosClave
 
 
 --------------Encriptar----------------------------
--- Agregar columnas encriptadas en la tabla de Empleados
-CREATE TABLE Empleado (
-    EmpleadoID INT PRIMARY KEY IDENTITY(1,1),
-    Nombre VARBINARY(256) NOT NULL,
-    Direccion VARBINARY(256) NOT NULL,
-    Telefono VARBINARY(256) NOT NULL
-);
 
--- Clave de encriptaciÛn 
+/*CREATE TABLE rrhh.empleado (
+	legajo int not null, -- identity o no?
+	nombre varchar(30) not null,
+	apellido varchar(30) not null,
+	dni int not null,
+	direccion varchar(100) not null,
+	email_laboral varchar(50),
+	cuil char(13) not null, -- ej: 11-22222222-3
+	cargo varchar(20) not null, -- ej: gerente de sucursal
+	id_sucursal int not null,
+	turno varchar(16), -- ej: jornada completa
+	baja bit default 0, -- borrado logico
+	constraint PK_empleado primary key (legajo),
+	constraint CK_email check (
+		email_laboral like '%@%.com'
+	),
+	constraint CK_cuil check (
+		cuil like '[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]'
+	),
+	constraint FK_sucursal foreign key
+	(id_sucursal) references rrhh.sucursal(id)
+);
+go*/
+
+
+-- Clave de encriptaci√≥n 
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'ContraseniaSegura';
-CREATE CERTIFICATE EmpleadoCertificado WITH SUBJECT = 'Certificado para encriptaciÛn de datos de empleados'
+CREATE CERTIFICATE EmpleadoCertificado WITH SUBJECT = 'Certificado para encriptaci√≥n de datos de empleados'
 CREATE SYMMETRIC KEY EmpleadoClave WITH ALGORITHM = AES_256 ENCRYPTION BY CERTIFICATE EmpleadoCertificado
+GO
 
--- Ejemplo para insertar un empleado con datos encriptados
-OPEN SYMMETRIC KEY EmpleadoClave DECRYPTION BY CERTIFICATE EmpleadoCertificado
-INSERT INTO Empleado (Nombre, Direccion, Telefono)
-VALUES (
-    EncryptByKey(Key_GUID('EmpleadoClave'), 'Juan Perez'),
-    EncryptByKey(Key_GUID('EmpleadoClave'), 'Calle Falsa 123'),
-    EncryptByKey(Key_GUID('EmpleadoClave'), '5555-5555')
-);
-CLOSE SYMMETRIC KEY EmpleadoClave
+--encriptar
+
+-- Abrir la clave sim√©trica para encriptar
+OPEN SYMMETRIC KEY EmpleadoClave 
+    ENCRYPTION BY CERTIFICATE EmpleadoCertificado;
+
+	SELECT * FROM sys.certificates;
+	SELECT * FROM sys.symmetric_keys;
+
+-- Encriptar los datos
+UPDATE rrhh.Empleado
+SET
+    Nombre = EncryptByKey(Key_GUID('EmpleadoClave'), Nombre),
+    Direccion = EncryptByKey(Key_GUID('EmpleadoClave'), Direccion);
+
+-- Cerrar la clave sim√©trica
+CLOSE SYMMETRIC KEY EmpleadoClave;
+GO
+
+SELECT * FROM sys.certificates WHERE name = 'EmpleadoCertificado';
+SELECT * FROM sys.symmetric_keys WHERE name = 'EmpleadoClave';
+
+
+OPEN SYMMETRIC KEY EmpleadoClave
+    ENCRYPTION BY CERTIFICATE EmpleadoCertificado;
+
+-- Encriptar con Key_GUID
+UPDATE rrhh.Empleado
+SET
+    Nombre = EncryptByKey(Key_GUID('EmpleadoClave'), Nombre),
+    Direccion = EncryptByKey(Key_GUID('EmpleadoClave'), Direccion);
+
+CLOSE SYMMETRIC KEY EmpleadoClave;
+GO
+
 
 -- Ejemplo para consultar los datos desencriptados
-OPEN SYMMETRIC KEY EmpleadoClave DECRYPTION BY CERTIFICATE EmpleadoCertificado
+-- Abrir la clave sim√©trica
+OPEN SYMMETRIC KEY EmpleadoClave DECRYPTION BY CERTIFICATE EmpleadoCertificado;
+
+-- Desencriptar los datos
 SELECT
-    EmpleadoID,
     CONVERT(VARCHAR, DecryptByKey(Nombre)) AS Nombre,
-    CONVERT(VARCHAR, DecryptByKey(Direccion)) AS Direccion,
-    CONVERT(VARCHAR, DecryptByKey(Telefono)) AS Telefono
-FROM Empleado;
-CLOSE SYMMETRIC KEY EmpleadoClave
+    CONVERT(VARCHAR, DecryptByKey(Direccion)) AS Direccion
+FROM rrhh.Empleado;
+
+-- Cerrar la clave sim√©trica
+CLOSE SYMMETRIC KEY EmpleadoClave;
+GO
+Select * from rrhh.empleado
+
+
 
 
 ----------------Respaldos--------------------------
+--Permisos para crear ruta
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+GO
+
+--Generacion de ruta
+EXEC xp_cmdshell 'mkdir C:\Backups';
+GO
+
 --Copia de Seguridad completa
 BACKUP DATABASE AuroraDB
 TO DISK = 'C:\Backups\AuroraDB_Full.bak'
 WITH FORMAT, MEDIANAME = 'SQLServerBackups', NAME = 'Respaldo Completo Semanal'
+GO
 
 --Copia de seguridad Diferencial
 BACKUP DATABASE AuroraDB
 TO DISK = 'C:\Backups\AuroraDB_Diferencial.bak'
 WITH DIFFERENTIAL, NAME = 'Respaldo Diferencial'
+GO
+
+--Cambiamos a respaldo full
+ALTER DATABASE AuroraDB
+SET RECOVERY FULL;
+GO
+
+--Primer respaldo antes del log
+BACKUP DATABASE AuroraDB
+TO DISK = 'C:\Backups\AuroraDB_Full.bak';
+GO
 
 --Copia de seguridad Incremental
 BACKUP LOG AuroraDB
 TO DISK = 'C:\Backups\AuroraDB_Log.bak'
 WITH NOFORMAT, NAME = 'Respaldo Incremental Diario'
-
+GO
 
 -- Consultas y Reportes en SQL Server
 
--- Reporte 1: Listar todas las sucursales con sus horarios y telÈfonos
-SELECT Ciudad, Direccion, Horario, Telefono
-FROM dbo.InformacionComplementaria
+-- Reporte 1: Listar todas las sucursales con sus horarios y tel√©fonos
+SELECT 
+    ciudad,
+    direccion,
+    horario,
+    telefono
+FROM 
+    rrhh.sucursal
+GO
 
 -- Reporte 2: Total de ventas por producto
-SELECT c.NombreProducto, SUM(v.Cantidad) AS TotalCantidad, SUM(v.Total) AS TotalVentas
-FROM dbo.VentasRegistradas v
-JOIN dbo.Catalogo c ON v.ProductoID = c.ProductoID
-GROUP BY c.NombreProducto
+SELECT 
+    p.nombre AS producto,
+    SUM(dv.cantidad) AS total_vendido,
+    SUM(dv.subtotal) AS total_venta
+FROM 
+    op.detalleVenta dv
+JOIN 
+    op.producto p ON dv.id_producto = p.id
+GROUP BY 
+    p.nombre
+ORDER BY 
+    total_venta DESC
+GO
 
--- Reporte 3: Productos con bajo stock (por ejemplo, menos de 10 unidades)
-SELECT ProductoID, NombreProducto, Stock
-FROM dbo.Catalogo
-WHERE Stock < 10
 
--- Reporte 4: Costos y proveedores de productos importados
-SELECT c.NombreProducto, p.Proveedor, p.Costo, p.FechaImportacion
-FROM dbo.ProductosImportados p
-JOIN dbo.Catalogo c ON p.ProductoID = c.ProductoID
+-- Reporte 3: Costos y proveedores de productos importados
+SELECT 
+    p.nombre AS producto,
+    p.precio AS costo,
+    p.proveedor,
+    p.precio_dolares AS costo_en_dolares
+FROM 
+    op.producto p
+WHERE 
+    p.precio_dolares IS NOT NULL
+ORDER BY 
+    p.nombre;
+GO
 
--- Reporte 5: Ventas mensuales promedio (por cada mes en el aÒo)
-SELECT DATEPART(MONTH, FechaVenta) AS Mes, AVG(Total) AS PromedioVentasMensual
-FROM dbo.VentasRegistradas
-GROUP BY DATEPART(MONTH, FechaVenta)
-ORDER BY Mes
 
--- Reporte 6: Listado de todos los productos, su categorÌa y precio
-SELECT NombreProducto, Categoria, Precio
-FROM dbo.Catalogo
+-- Reporte 4: Listado de todos los productos, su categor√≠a y precio
+SELECT 
+    nombre AS producto,
+    categoria,
+    precio
+FROM 
+    op.producto
+WHERE 
+    baja = 0
+ORDER BY 
+    categoria, nombre;
+GO
